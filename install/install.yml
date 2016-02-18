@@ -19,4 +19,4 @@
       git:
         repo: "{{repo_path}}"
         dest: "{{repo_dir}}"
-        update: no
+        update: yes
