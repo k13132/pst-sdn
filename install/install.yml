@@ -4,13 +4,31 @@
     repo_dir: /root/pst/
     repo_path: https://github.com/tomkukral/pst_sdn.git
   tasks:
-    - name: install openvswitch 
+    - name: install packages
       apt: name="{{item}}" state=present
       with_items:
         - openvswitch-common
         - openvswitch-switch
+        - sudo
+        - git
+        - mininet
+        - python-pip
+        - python-setuptools 
+        - python-eventlet 
+        - python-lxml 
+        - python-msgpack 
+        - build-essential
 
-    - name: create directory for psd
+    - name: install ryu
+      pip: name="{{item}}" state=present
+      with_items:
+        - ryu
+        - oslo.config
+
+    - name: stop & disable ovs-controller
+      service: name=openvswitch-controller state=stopped enabled=no
+
+    - name: create directory for pst
       file:
         path: "{{repo_dir}}"
         state: directory
@@ -20,3 +38,4 @@
         repo: "{{repo_path}}"
         dest: "{{repo_dir}}"
         update: yes
+
