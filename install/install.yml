@@ -1,0 +1,22 @@
+---
+- hosts: all
+  vars:
+    repo_dir: /root/pst/
+    repo_path: https://github.com/tomkukral/pst_sdn.git
+  tasks:
+    - name: install openvswitch 
+      apt: name="{{item}}" state=present
+      with_items:
+        - openvswitch-common
+        - openvswitch-switch
+
+    - name: create directory for psd
+      file:
+        path: "{{repo_dir}}"
+        state: directory
+
+    - name: clone repository
+      git:
+        repo: "{{repo_path}}"
+        dest: "{{repo_dir}}"
+        update: no
