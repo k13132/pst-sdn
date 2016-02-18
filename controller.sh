@@ -6,4 +6,4 @@ if [ "$file" == "" ]; then
 	file="hub.py";
 fi
 
-ryu-manager template.py
+ryu-manager "$file"
