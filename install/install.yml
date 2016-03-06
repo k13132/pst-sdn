@@ -5,7 +5,7 @@
     repo_path: https://github.com/tomkukral/pst_sdn.git
   tasks:
     - name: install packages
-      apt: name="{{item}}" state=present
+      apt: name="{{item}}" state=present update_cache=yes
       with_items:
         - openvswitch-common
         - openvswitch-switch
@@ -20,10 +20,11 @@
         - build-essential
 
     - name: install ryu
-      pip: name="{{item}}" state=present
+      pip: name="{{item}}" state=latest
       with_items:
         - ryu
         - oslo.config
+        - six
 
     - name: stop & disable ovs-controller
       service: name=openvswitch-controller state=stopped enabled=no
