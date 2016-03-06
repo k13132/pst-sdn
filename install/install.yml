@@ -3,6 +3,9 @@
   vars:
     repo_dir: /root/pst/
     repo_path: https://github.com/tomkukral/pst_sdn.git
+  handlers:
+    - name: reload ssh
+      service: name=ssh state=reloaded
   tasks:
     - name: install packages
       apt: name="{{item}}" state=present update_cache=yes
@@ -40,3 +43,14 @@
         dest: "{{repo_dir}}"
         update: yes
 
+    - name: allow SSH password login
+      lineinfile:
+        dest: /etc/ssh/sshd_config
+        regexp: '^PasswordAuthentication.*'
+        line: PasswordAuthentication yes
+        state: present
+      notify: reload ssh
+    - name: set password for ubuntu user
+      user:
+        name: ubuntu
+        password: $6$7yr/SnSVRZZ4e1OZ$v3goGGlFdZ.2dwtXaHJPTHFSkmEacrW2jc/XiB..2dHnCMZC0QgVPK2ONLtRnG96gyzpO.5NllBwSKS/mo6Rh.
