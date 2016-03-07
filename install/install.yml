@@ -21,6 +21,9 @@
         - python-lxml 
         - python-msgpack 
         - build-essential
+        - tcpdump
+        - iptraf
+        - vim
 
     - name: install ryu
       pip: name="{{item}}" state=latest
