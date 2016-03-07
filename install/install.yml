@@ -24,6 +24,8 @@
         - tcpdump
         - iptraf
         - vim
+        - python-dev
+        - tmux
 
     - name: install ryu
       pip: name="{{item}}" state=latest
@@ -31,6 +33,9 @@
         - ryu
         - oslo.config
         - six
+        - repoze.lru
+        - debtcollector
+        - stevedore
 
     - name: stop & disable ovs-controller
       service: name=openvswitch-controller state=stopped enabled=no
