@@ -2,7 +2,9 @@
 - hosts: all
   vars:
     repo_dir: /root/pst/
-    repo_path: https://github.com/tomkukral/pst_sdn.git
+    repo_path: https://github.com/k13132/pst-sdn.git
+  become: yes
+  remote_user: ubuntu
   handlers:
     - name: reload ssh
       service: name=ssh state=reloaded
@@ -26,6 +28,9 @@
         - vim
         - python-dev
         - tmux
+        - apt-transport-https
+        - ca-certificates
+
 
     - name: install ryu
       pip: name="{{item}}" state=latest
@@ -62,3 +67,16 @@
       user:
         name: ubuntu
         password: $6$7yr/SnSVRZZ4e1OZ$v3goGGlFdZ.2dwtXaHJPTHFSkmEacrW2jc/XiB..2dHnCMZC0QgVPK2ONLtRnG96gyzpO.5NllBwSKS/mo6Rh.
+
+    # docker
+    - name: add docker apt key
+      apt_key: keyserver=hkp://p80.pool.sks-keyservers.net:80 id=58118E89F3A912897C070ADBF76221572C52609D
+
+    - name: add docker apt repository
+      apt_repository:
+        repo: "deb https://apt.dockerproject.org/repo ubuntu-{{ansible_distribution_release}} main"
+        state: present
+        update_cache: yes
+
+    - name: install docker-engine
+      apt: name=docker-engine state=present install_recommends=no
