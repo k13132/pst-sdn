@@ -1,6 +1,6 @@
 Installation of VM used in A0M32PST
 
-- `./controller file.py` - start Ryu controller with _file.py_ (_hub.py_ is used if file is omitted)
+- `./controller file.py [docker]` - start Ryu controller with _file.py_ (_hub.py_ is used if file is omitted). _docker_ parameter can be used to run Ryu in Docker.
 - `./mininet.sh` - run mininet with single topology and 5 hosts, enable OpenFlow 1.3, connect to controller at *127.0.0.1:6333* and return mininet console
 
 # Additional topics
