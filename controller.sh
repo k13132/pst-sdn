@@ -6,4 +6,8 @@ if [ "$file" == "" ]; then
 	file="hub.py";
 fi
 
-ryu-manager "$file"
+if [ "$2" != "docker" ]; then
+	ryu-manager "$file"
+else
+	docker run --rm -ti --volume $PWD:/usr/share/app/files/:ro tomkukral/ryu ryu-manager files/$file
+fi
