@@ -7,7 +7,10 @@ if [ "$file" == "" ]; then
 fi
 
 if [ "$2" != "docker" ]; then
-	ryu-manager "$file"
+	cmd="ryu-manager \"$file\""
 else
-	docker run --rm -ti --volume $PWD:/usr/share/app/files/:ro tomkukral/ryu ryu-manager files/$file
+	cmd="docker run --rm -ti --volume $PWD:/usr/share/app/files/:ro tomkukral/ryu ryu-manager files/$file"
 fi
+
+echo "$cmd"
+$cmd
