@@ -3,6 +3,7 @@
   vars:
     repo_dir: /root/pst/
     repo_path: https://github.com/k13132/pst-sdn.git
+    password: $6$7yr/SnSVRZZ4e1OZ$v3goGGlFdZ.2dwtXaHJPTHFSkmEacrW2jc/XiB..2dHnCMZC0QgVPK2ONLtRnG96gyzpO.5NllBwSKS/mo6Rh.
   become: yes
   remote_user: ubuntu
   handlers:
@@ -18,10 +19,6 @@
         - git
         - mininet
         - python-pip
-        - python-setuptools 
-        - python-eventlet 
-        - python-lxml 
-        - python-msgpack 
         - build-essential
         - tcpdump
         - iptraf
@@ -30,20 +27,13 @@
         - tmux
         - apt-transport-https
         - ca-certificates
+        - nmap
 
-
-    - name: install ryu
-      pip: name="{{item}}" state=latest
+    - name: install from pip
+      pip: name="{{item}}" state=present
       with_items:
-        - ryu
-        - oslo.config
-        - six
-        - repoze.lru
-        - debtcollector
-        - stevedore
-
-    - name: stop & disable ovs-controller
-      service: name=openvswitch-controller state=stopped enabled=no
+        - virtualenv
+        - virtualenvwrapper
 
     - name: create directory for pst
       file:
@@ -55,6 +45,27 @@
         repo: "{{repo_path}}"
         dest: "{{repo_dir}}"
         update: yes
+        force: yes
+        version: master
+
+    - name: clean files in repository
+      file:
+        path: "{{repo_dir}}/{{item}}"
+        state: absent
+      with_items:
+        - switch_13.py
+
+    - name: install ryu
+      pip:
+        chdir: "{{ repo_dir }}"
+        requirements: requirements.txt
+        virtualenv: "~/.virtualenvs/pst"
+
+    - name: add virtualenv to bashrc
+      lineinfile:
+        dest: ~/.bashrc
+        line: "source ~/.virtualenvs/pst/bin/activate"
+        state: present
 
     - name: allow SSH password login
       lineinfile:
@@ -63,20 +74,8 @@
         line: PasswordAuthentication yes
         state: present
       notify: reload ssh
+
     - name: set password for ubuntu user
       user:
         name: ubuntu
-        password: $6$7yr/SnSVRZZ4e1OZ$v3goGGlFdZ.2dwtXaHJPTHFSkmEacrW2jc/XiB..2dHnCMZC0QgVPK2ONLtRnG96gyzpO.5NllBwSKS/mo6Rh.
-
-    # docker
-    - name: add docker apt key
-      apt_key: keyserver=hkp://p80.pool.sks-keyservers.net:80 id=58118E89F3A912897C070ADBF76221572C52609D
-
-    - name: add docker apt repository
-      apt_repository:
-        repo: "deb https://apt.dockerproject.org/repo ubuntu-{{ansible_distribution_release}} main"
-        state: present
-        update_cache: yes
-
-    - name: install docker-engine
-      apt: name=docker-engine state=present install_recommends=no
+        password: "{{ password }}"

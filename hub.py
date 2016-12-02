@@ -1,58 +1,112 @@
 # impors
-from ryu.base import app_manager
-from ryu.controller import ofp_event
-from ryu.controller.handler import MAIN_DISPATCHER
+from ryu.base import app_manager  # basic app
+from ryu.controller import ofp_event  # ofp events
+from ryu.controller.handler import MAIN_DISPATCHER  # handlers
+from ryu.controller.handler import CONFIG_DISPATCHER  # handlers
 from ryu.controller.handler import set_ev_cls
 
 # openflow version 1.3
 from ryu.ofproto import ofproto_v1_3
 
-from datetime import datetime
+# other stuff
+import time
 
 
 class Hub(app_manager.RyuApp):
     # set OF 1.3
     OFP_VERSIONS = [ofproto_v1_3.OFP_VERSION]
 
-    # class initialization
     def __init__(self, *args, **kwargs):
+        """Initialize class"""
+
         super(Hub, self).__init__(*args, **kwargs)
 
-    # event definition 
-    # run on: ofp_event.EventOFPPacketIn
-    # when switch state is: MAIN_DISPATCHER (connected to controller)
+    def add_flow(self, datapath, priority, match, actions, timeout=10, buffer_id=None):
+        """Add flow to datapath"""
+
+        ofproto = datapath.ofproto
+        parser = datapath.ofproto_parser
+
+        inst = [parser.OFPInstructionActions(ofproto.OFPIT_APPLY_ACTIONS, actions)]
+
+        if buffer_id:
+            mod = parser.OFPFlowMod(
+                datapath=datapath,
+                buffer_id=buffer_id,
+                priority=priority,
+                match=match,
+                instructions=inst
+            )
+        else:
+            mod = parser.OFPFlowMod(
+                datapath=datapath,
+                priority=priority,
+                match=match,
+                instructions=inst
+            )
+
+        # send to datapath (switch)
+        datapath.send_msg(mod)
+
+    # event definition
+    @set_ev_cls(ofp_event.EventOFPSwitchFeatures, CONFIG_DISPATCHER)
+    def configure_switch(self, ev):
+        """
+        Run during datapath first connection
+            run on: ofp_event.EventOFPSwitchFeatures
+            when switch state is: CONFIG_DISPATCHER (establishing connection)
+        """
+
+        datapath = ev.msg.datapath
+        ofproto = datapath.ofproto
+        parser = datapath.ofproto_parser
+
+        # install table-miss flow entry
+        match = parser.OFPMatch()
+        actions = [parser.OFPActionOutput(ofproto.OFPP_CONTROLLER, ofproto.OFPCML_NO_BUFFER)]
+        self.add_flow(datapath, 0, match, actions, 0)
+
     @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
     def packet_in_handler(self, ev):
-        print '--- new packet_in at time %s' % datetime.now()
-        ## gain data about incoming mgs/packet
+        """
+        Handle packet_in events
+            run on: ofp_event.EventOFPPacketIn
+            when switch state is: MAIN_DISPATCHER (connected to controller)
+        """
+
+        print('--- new packet_in at time {}'.format(time.time()))
+        # gain data about incoming mgs/packet
         # incomming msg - packet_in datastructure
         msg = ev.msg
-        #print msg
 
-        in_port = msg.match._fields2[0][1]
-        
         # datapath - (= switch)
         datapath = msg.datapath
-        #print datapath
 
         # OF protocol
-        ofp = datapath.ofproto
-        ofp_parser = datapath.ofproto_parser
-        #print ofp
-        #print ofp_parser
+        ofproto = datapath.ofproto
+        parser = datapath.ofproto_parser
 
-        ## send packet to all interfaces (OFPPK_FLOOD constant)
-        # create actions
-        actions = [ofp_parser.OFPActionOutput(ofp.OFPP_FLOOD)]
+        # parser parsing
+        pkt = packet.Packet(msg.data)
+        eth = pkt.get_protocol(ethernet.ethernet)
+
+        # create parsing variables
+        in_port = msg.match['in_port']
+
+        print('\tswitch: {}, port: {}'.format(datapath.id, in_port))
+
+        outport = ofproto.OFPP_FLOOD  # special variable for FLOOD target interface
+
+        actions = [parser.OFPActionOutput(outport)]
+
+        # send packet
+        print('\tflooding packet to all interfaces')
         # create out object
-        out = ofp_parser.OFPPacketOut(
-            datapath = datapath, 
-            buffer_id = msg.buffer_id, 
-            in_port = in_port,
-            actions = actions
+        out = parser.OFPPacketOut(
+            datapath=datapath,
+            buffer_id=msg.buffer_id,
+            in_port=in_port,
+            actions=actions
         )
         # send out object
         datapath.send_msg(out)
-
-        print '\tswitch: %s, port: %s' % (datapath.id, in_port)
-        print '\tflooded to port OFPP_FLOOD'
