@@ -86,10 +86,6 @@ class Hub(app_manager.RyuApp):
         ofproto = datapath.ofproto
         parser = datapath.ofproto_parser
 
-        # parser parsing
-        pkt = packet.Packet(msg.data)
-        eth = pkt.get_protocol(ethernet.ethernet)
-
         # create parsing variables
         in_port = msg.match['in_port']
 
