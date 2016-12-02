@@ -46,7 +46,7 @@
         dest: "{{repo_dir}}"
         update: yes
         force: yes
-        version: regulator
+        version: master
 
     - name: clean files in repository
       file:
